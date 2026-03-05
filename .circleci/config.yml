@@ -9,8 +9,13 @@ workflows:
             branches:
               only:
                 - main
-
-
+      - deploy:
+          filters:
+            branches:
+              only:
+                -main
+          requires:
+            - build
 
 # Define the jobs we want to run for this project
 jobs:
@@ -35,5 +40,16 @@ jobs:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
+      - save_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+          paths:
+            - ./node_modules
+  deploy:
+    docker:
+      - image: cirecleci/node:latest
+    steps:
+      - run:
+          name: deploy-application
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "rm -rf ExampleApplication/;git clone https://github.com/CraigM2345/ExampleApplication.git source ExampleApplication/deploy.sh"
     
 
